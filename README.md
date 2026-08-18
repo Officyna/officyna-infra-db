@@ -60,6 +60,10 @@ executa:
   (`/officyna/db/endpoint` e `/officyna/db/port`), para que o pipeline do
   [officyna-service](https://github.com/Officyna/officyna-service) consiga
   montar a connection string sem depender diretamente deste repositório.
+- **Manual** (aba *Actions* → *Terraform CI/CD (DocumentDB)* → *Run workflow*):
+  escolha `action: apply` para reaplicar, ou `action: destroy` (digitando
+  `destroy` no campo de confirmação) para desligar o banco quando não
+  estiver em uso e evitar custo na AWS.
 
 ### Secrets necessários no repositório
 
