@@ -25,9 +25,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  AWS_REGION: us-east-1
-
 jobs:
   plan:
     name: Terraform Plan
@@ -45,7 +42,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -80,7 +77,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -93,7 +90,7 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve -input=false -var="db_password=${{ secrets.DB_PASSWORD }}"
 
-      - name: Publicar endpoint no SSM Parameter Store
+      - name: Publicar endpoint e rede no SSM Parameter Store
         run: |
           aws ssm put-parameter \
             --name "/officyna/db/endpoint" \
@@ -105,6 +102,24 @@ jobs:
             --name "/officyna/db/port" \
             --type "String" \
             --value "$(terraform output -raw docdb_port)" \
+            --overwrite
+
+          aws ssm put-parameter \
+            --name "/officyna/network/vpc_id" \
+            --type "String" \
+            --value "$(terraform output -raw vpc_id)" \
+            --overwrite
+
+          aws ssm put-parameter \
+            --name "/officyna/network/vpc_cidr" \
+            --type "String" \
+            --value "$(terraform output -raw vpc_cidr)" \
+            --overwrite
+
+          aws ssm put-parameter \
+            --name "/officyna/network/subnet_ids" \
+            --type "String" \
+            --value "$(terraform output -json subnet_ids | jq -c .)" \
             --overwrite
 
   destroy:
@@ -123,7 +138,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
