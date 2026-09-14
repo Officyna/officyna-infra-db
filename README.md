@@ -19,13 +19,21 @@ infraestrutura em repositórios próprios com CI/CD.
 
 | Recurso | Descrição |
 |---|---|
+| `aws_vpc.vpc_fiap` | VPC própria da infraestrutura |
+| `aws_subnet.subnet_public` | 3 subnets públicas (uma por AZ) |
+| `aws_internet_gateway.igw_api` | Internet Gateway da VPC |
 | `aws_docdb_subnet_group.default` | Subnet group do cluster |
 | `aws_security_group.docdb_sg` | Security group liberando a porta 27017 internamente |
 | `aws_docdb_cluster.docdb` | Cluster DocumentDB (`officyna-mongodb-cluster`) |
 | `aws_docdb_cluster_instance.cluster_instances` | Instância `db.t3.medium` do cluster |
 
 O estado do Terraform é armazenado remotamente no bucket S3
-`officyna-terraform-state-995093551820-us-east-1-an` (`docdb/terraform.tfstate`).
+`projeto-officyna-soat` (`docdb/terraform.tfstate`).
+
+A VPC e as subnets criadas aqui são reaproveitadas pelo cluster EKS do
+[officyna-infra-k8s](https://github.com/Officyna/officyna-infra-k8s) — o
+`vpc_id` e os `subnet_ids` são publicados no SSM Parameter Store (veja CI/CD
+abaixo) para esse outro repositório consumir.
 
 ## Pré-requisitos
 
@@ -55,11 +63,15 @@ executa:
 
 - **Pull Request para `main`**: `terraform fmt -check`, `terraform validate` e
   `terraform plan`.
-- **Push em `main`**: `terraform apply -auto-approve` e, em seguida, publica o
-  endpoint e a porta do DocumentDB no **AWS Systems Manager Parameter Store**
-  (`/officyna/db/endpoint` e `/officyna/db/port`), para que o pipeline do
-  [officyna-service](https://github.com/Officyna/officyna-service) consiga
-  montar a connection string sem depender diretamente deste repositório.
+- **Push em `main`**: `terraform apply -auto-approve` e, em seguida, publica no
+  **AWS Systems Manager Parameter Store**:
+  - `/officyna/db/endpoint` e `/officyna/db/port` — usados pelo pipeline do
+    [officyna-service](https://github.com/Officyna/officyna-service) para
+    montar a connection string sem depender diretamente deste repositório.
+  - `/officyna/network/vpc_id`, `/officyna/network/vpc_cidr` e
+    `/officyna/network/subnet_ids` — usados pelo pipeline do
+    [officyna-infra-k8s](https://github.com/Officyna/officyna-infra-k8s) para
+    criar o cluster EKS na mesma VPC/subnets do banco.
 - **Manual** (aba *Actions* → *Terraform CI/CD (DocumentDB)* → *Run workflow*):
   escolha `action: apply` para reaplicar, ou `action: destroy` (digitando
   `destroy` no campo de confirmação) para desligar o banco quando não
@@ -71,6 +83,7 @@ executa:
 |---|---|
 | `AWS_ACCESS_KEY_ID` | Access key com permissão de DocumentDB/EC2/SSM |
 | `AWS_SECRET_ACCESS_KEY` | Secret key correspondente |
+| `AWS_REGION` | Região da AWS (ex: `us-east-1`) |
 | `DB_PASSWORD` | Senha master do banco (usada como `var.db_password`) |
 
 ### Regras de proteção da branch `main`
