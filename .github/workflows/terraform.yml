@@ -61,7 +61,10 @@ jobs:
         run: terraform validate
 
       - name: Terraform Plan
-        run: terraform plan -no-color -input=false -var="db_password=${{ secrets.DB_PASSWORD }}"
+        run: |
+          terraform plan -no-color -input=false \
+            -var="db_password=${{ secrets.DB_PASSWORD }}" \
+            -var="billing_db_password=${{ secrets.DB_PASSWORD_BILLING_SERVICE }}"
 
   apply:
     name: Terraform Apply
@@ -90,7 +93,10 @@ jobs:
         run: terraform init
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -input=false -var="db_password=${{ secrets.DB_PASSWORD }}"
+        run: |
+          terraform apply -auto-approve -input=false \
+            -var="db_password=${{ secrets.DB_PASSWORD }}" \
+            -var="billing_db_password=${{ secrets.DB_PASSWORD_BILLING_SERVICE }}"
 
       - name: Publicar endpoint e rede no SSM Parameter Store
         run: |
@@ -104,6 +110,18 @@ jobs:
             --name "/officyna/db/port" \
             --type "String" \
             --value "$(terraform output -raw docdb_port)" \
+            --overwrite
+
+          aws ssm put-parameter \
+            --name "/officyna/billing-db/endpoint" \
+            --type "String" \
+            --value "$(terraform output -raw billing_postgres_endpoint)" \
+            --overwrite
+
+          aws ssm put-parameter \
+            --name "/officyna/billing-db/port" \
+            --type "String" \
+            --value "$(terraform output -raw billing_postgres_port)" \
             --overwrite
 
           aws ssm put-parameter \
@@ -151,4 +169,7 @@ jobs:
         run: terraform init
 
       - name: Terraform Destroy
-        run: terraform destroy -auto-approve -input=false -var="db_password=${{ secrets.DB_PASSWORD }}"
+        run: |
+          terraform destroy -auto-approve -input=false \
+            -var="db_password=${{ secrets.DB_PASSWORD }}" \
+            -var="billing_db_password=${{ secrets.DB_PASSWORD_BILLING_SERVICE }}"
