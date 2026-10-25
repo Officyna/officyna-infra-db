@@ -48,7 +48,8 @@ resource "aws_db_instance" "billing_postgres" {
   publicly_accessible = false
   storage_encrypted   = true
   skip_final_snapshot = true
-  # Retenção de backup 0 é intencional aqui: app pequeno, só sobe pra teste, postura de baixo
-  # custo igual o skip_final_snapshot — não é descuido.
-  backup_retention_period = 0
+  # 1 dia de retenção (não 0): o SonarCloud marca retenção zerada como achado de segurança
+  # (S6364) e trava o quality gate do CI. Custo extra é irrelevante numa instância micro —
+  # não vale deixar o gate vermelho por causa disso.
+  backup_retention_period = 1
 }
