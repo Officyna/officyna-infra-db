@@ -61,10 +61,10 @@ jobs:
         run: terraform validate
 
       - name: Terraform Plan
-        run: |
-          terraform plan -no-color -input=false \
-            -var="db_password=${{ secrets.DB_PASSWORD }}" \
-            -var="billing_db_password=${{ secrets.DB_PASSWORD_BILLING_SERVICE }}"
+        env:
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_billing_db_password: ${{ secrets.DB_PASSWORD_BILLING_SERVICE }}
+        run: terraform plan -no-color -input=false
 
   apply:
     name: Terraform Apply
@@ -93,10 +93,10 @@ jobs:
         run: terraform init
 
       - name: Terraform Apply
-        run: |
-          terraform apply -auto-approve -input=false \
-            -var="db_password=${{ secrets.DB_PASSWORD }}" \
-            -var="billing_db_password=${{ secrets.DB_PASSWORD_BILLING_SERVICE }}"
+        env:
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_billing_db_password: ${{ secrets.DB_PASSWORD_BILLING_SERVICE }}
+        run: terraform apply -auto-approve -input=false
 
       - name: Publicar endpoint e rede no SSM Parameter Store
         run: |
@@ -169,7 +169,7 @@ jobs:
         run: terraform init
 
       - name: Terraform Destroy
-        run: |
-          terraform destroy -auto-approve -input=false \
-            -var="db_password=${{ secrets.DB_PASSWORD }}" \
-            -var="billing_db_password=${{ secrets.DB_PASSWORD_BILLING_SERVICE }}"
+        env:
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_billing_db_password: ${{ secrets.DB_PASSWORD_BILLING_SERVICE }}
+        run: terraform destroy -auto-approve -input=false

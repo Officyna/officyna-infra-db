@@ -32,18 +32,23 @@ resource "aws_security_group" "billing_postgres_sg" {
 }
 
 resource "aws_db_instance" "billing_postgres" {
-  identifier              = "officyna-billing-postgres"
-  engine                  = "postgres"
-  engine_version          = "16"
-  instance_class          = "db.t4g.micro"
-  allocated_storage       = 20
-  storage_type            = "gp3"
-  db_name                 = "officyna_billing"
-  username                = var.billing_db_username
-  password                = var.billing_db_password
-  db_subnet_group_name    = aws_db_subnet_group.billing_postgres.name
-  vpc_security_group_ids  = [aws_security_group.billing_postgres_sg.id]
-  publicly_accessible     = true
-  skip_final_snapshot     = true
+  identifier             = "officyna-billing-postgres"
+  engine                 = "postgres"
+  engine_version         = "16"
+  instance_class         = "db.t4g.micro"
+  allocated_storage      = 20
+  storage_type           = "gp3"
+  db_name                = "officyna_billing"
+  username               = var.billing_db_username
+  password               = var.billing_db_password
+  db_subnet_group_name   = aws_db_subnet_group.billing_postgres.name
+  vpc_security_group_ids = [aws_security_group.billing_postgres_sg.id]
+  # Sem acesso público: o billing-service roda dentro da mesma VPC (EKS), não precisa expor o
+  # banco pra internet — reduz superfície de ataque sem custo nenhum.
+  publicly_accessible = false
+  storage_encrypted   = true
+  skip_final_snapshot = true
+  # Retenção de backup 0 é intencional aqui: app pequeno, só sobe pra teste, postura de baixo
+  # custo igual o skip_final_snapshot — não é descuido.
   backup_retention_period = 0
 }
