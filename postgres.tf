@@ -48,8 +48,8 @@ resource "aws_db_instance" "billing_postgres" {
   publicly_accessible = false
   storage_encrypted   = true
   skip_final_snapshot = true
-  # 1 dia de retenção (não 0): o SonarCloud marca retenção zerada como achado de segurança
-  # (S6364) e trava o quality gate do CI. Custo extra é irrelevante numa instância micro —
-  # não vale deixar o gate vermelho por causa disso.
-  backup_retention_period = 1
+  # 7 dias de retenção: o SonarCloud (S6364) considerou até 1 dia "curto demais" ainda. RDS
+  # dá armazenamento de backup grátis até o tamanho do banco, então 7 dias numa instância
+  # pequena não tem custo relevante — não vale deixar o gate vermelho por isso.
+  backup_retention_period = 7
 }
