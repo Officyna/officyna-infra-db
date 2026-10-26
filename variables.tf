@@ -21,3 +21,15 @@ variable "cidr_vpc" {
   type        = string
   default     = "10.0.0.0/16"
 }
+
+variable "billing_db_username" {
+  description = "Usuário master do Postgres do billing-service"
+  type        = string
+  default     = "officynabillingdbuser"
+}
+
+variable "billing_db_password" {
+  description = "Senha do Postgres do billing-service (injetada via GitHub Secrets, DB_PASSWORD_BILLING_SERVICE)"
+  type        = string
+  sensitive   = true
+}
