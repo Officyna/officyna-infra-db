@@ -20,3 +20,13 @@ output "subnet_ids" {
   description = "Lista de subnets públicas criadas na VPC do banco"
   value       = aws_subnet.subnet_public[*].id
 }
+
+output "billing_postgres_endpoint" {
+  description = "Endpoint de conexao do Postgres do billing-service"
+  value       = aws_db_instance.billing_postgres.address
+}
+
+output "billing_postgres_port" {
+  description = "Porta do Postgres do billing-service"
+  value       = aws_db_instance.billing_postgres.port
+}
